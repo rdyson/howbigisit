@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">howBigisit</string>
     <string name="take_photo">Take a photo</string>
-    <string name="the_question">Do you want to know how big it is?</string>
+    <string name="the_question">Do you want to know how big is it?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="again">Measure something else</string>
