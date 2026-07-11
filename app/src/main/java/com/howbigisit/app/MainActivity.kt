@@ -100,7 +100,7 @@ private fun CaptureScreen(onTakePhoto: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.app_name),
+            text = stringResource(R.string.the_question),
             style = MaterialTheme.typography.headlineLarge,
             textAlign = TextAlign.Center
         )

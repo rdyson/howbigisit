@@ -1,6 +1,6 @@
 # howBigisit
 
-Take a photo of anything. The app asks: **"Do you want to know how big it is?"**
+Take a photo of anything. The app asks: **"Do you want to know how big is it?"**
 
 - **No** → the app closes. Some things are better left unknown.
 - **Yes** → you receive one of four verdicts, chosen completely at random and
