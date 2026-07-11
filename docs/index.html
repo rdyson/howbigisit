@@ -1,0 +1,425 @@
+<meta charset="utf-8">
+<title>howBigisit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    --ink: #0E1116;
+    --panel: #161B22;
+    --line: #262D38;
+    --amber: #FFB000;
+    --amber-dim: #8a6200;
+    --text: #E8E3D8;
+    --dim: #8B94A3;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: #05070a;
+    font-family: var(--mono);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Phone frame on desktop, full bleed on mobile */
+  .device {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    background: var(--ink);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 520px) {
+    .device {
+      width: 390px;
+      height: 780px;
+      max-height: 92vh;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      box-shadow: 0 40px 80px rgba(0,0,0,.6);
+    }
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+  .screen.active { display: flex; }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .statusbar .ok { color: var(--amber); }
+
+  /* ---------- Launch ---------- */
+  #launch { justify-content: space-between; }
+  .brand { margin-top: 18vh; }
+  .brand h1 {
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .brand h1 .q { color: var(--amber); }
+  .brand p {
+    margin: 0;
+    color: var(--dim);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 30ch;
+  }
+  .spec {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--dim);
+    letter-spacing: .04em;
+  }
+  .spec b { color: var(--text); font-weight: 600; }
+
+  .big-btn {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: var(--amber);
+    color: #1a1200;
+    border: none;
+    border-radius: 12px;
+    padding: 18px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .big-btn:focus-visible, .ghost-btn:focus-visible, .dlg button:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 3px;
+  }
+  .big-btn:active { transform: translateY(1px); }
+
+  .ghost-btn {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: none;
+    color: var(--dim);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  /* ---------- Subject / measuring / verdict ---------- */
+  .photo-wrap {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    margin: 20px 0;
+    flex: 0 0 auto;
+  }
+  .photo-wrap img {
+    display: block;
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+  }
+  @media (max-height: 700px) { .photo-wrap img { height: 240px; } }
+
+  .scanline {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--amber);
+    box-shadow: 0 0 18px 4px rgba(255,176,0,.55);
+    top: -2px;
+    display: none;
+  }
+  .measuring .scanline { display: block; animation: sweep 1.1s ease-in-out infinite alternate; }
+  @keyframes sweep { from { top: 4%; } to { top: 96%; } }
+  @media (prefers-reduced-motion: reduce) {
+    .measuring .scanline { animation: none; top: 50%; }
+  }
+
+  .corner { position: absolute; width: 18px; height: 18px; border: 2px solid var(--amber); }
+  .corner.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+  .corner.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+  .corner.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+  .corner.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+  .telemetry {
+    font-size: 12px;
+    line-height: 2;
+    color: var(--dim);
+    min-height: 72px;
+    letter-spacing: .04em;
+  }
+  .telemetry .done::after { content: " ✓"; color: var(--amber); }
+
+  .verdict-label {
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 8px;
+  }
+  .verdict {
+    font-size: clamp(44px, 13vw, 64px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--amber);
+    margin: 6px 0 4px;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .certainty {
+    font-size: 12px;
+    color: var(--dim);
+    margin-bottom: 24px;
+  }
+
+  .push { flex: 1; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+
+  /* ---------- Question dialog ---------- */
+  .dlg-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,7,10,.7);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  .dlg-backdrop.open { display: flex; }
+  .dlg {
+    font-family: var(--sans);
+    background: #1d232c;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .dlg h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+    padding: 22px 20px 18px;
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+  .dlg .row { display: flex; border-top: 1px solid var(--line); }
+  .dlg button {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 16px;
+    padding: 14px;
+    background: none;
+    border: none;
+    color: #6ea8ff;
+    cursor: pointer;
+  }
+  .dlg button.yes { font-weight: 700; border-left: 1px solid var(--line); }
+
+  /* ---------- Closed ---------- */
+  #closed {
+    background: #000;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+  }
+  #closed p { color: #555f6d; font-size: 13px; margin: 0; max-width: 26ch; line-height: 1.7; }
+  #closed .tiny {
+    background: none; border: none; color: #3a4350;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; padding: 10px; text-decoration: underline;
+  }
+
+  .foot {
+    font-size: 10px;
+    color: #4a5260;
+    letter-spacing: .06em;
+    text-align: center;
+    line-height: 1.7;
+  }
+  input[type=file] { display: none; }
+  [hidden] { display: none !important; }
+</style>
+
+<div class="device" id="device">
+
+  <!-- LAUNCH -->
+  <section class="screen active" id="launch">
+    <div class="statusbar"><span>howBigisit v1.0</span><span class="ok">● Sensor ready</span></div>
+    <div class="brand">
+      <h1>How big is it<span class="q">?</span></h1>
+      <p>Point the instrument at anything. Receive a classification.</p>
+    </div>
+    <div class="stack">
+      <div class="spec">
+        Output classes: <b>Little · Medium · Kind of big · Big</b><br>
+        Basis of measurement: <b>none</b><br>
+        Accuracy: <b>consistent with the above</b>
+      </div>
+      <button class="big-btn" id="btn-photo">Take a photo</button>
+      <div class="foot">Results are tied to no measurement of any kind.<br>Patent not pending.</div>
+    </div>
+  </section>
+
+  <!-- SUBJECT ACQUIRED / MEASURING / VERDICT -->
+  <section class="screen" id="subject">
+    <div class="statusbar"><span>Subject acquired</span><span class="ok" id="sub-status">● Idle</span></div>
+
+    <div class="photo-wrap" id="photo-wrap">
+      <img id="photo" alt="The subject in question">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="scanline"></div>
+    </div>
+
+    <div class="telemetry" id="telemetry"></div>
+
+    <div id="result" hidden>
+      <div class="verdict-label">Official classification</div>
+      <div class="verdict" id="verdict" role="status" aria-live="polite"></div>
+      <div class="certainty" id="certainty"></div>
+    </div>
+
+    <div class="push"></div>
+    <div class="stack" id="again-stack" hidden>
+      <button class="big-btn" id="btn-again">Measure something else</button>
+      <div class="foot">This classification is final and unrelated to the subject.</div>
+    </div>
+  </section>
+
+  <!-- CLOSED -->
+  <section class="screen" id="closed">
+    <p>howBigisit has closed.</p>
+    <p>Some things are better left unknown.</p>
+    <button class="tiny" id="btn-reopen">Reopen app</button>
+  </section>
+
+  <!-- THE QUESTION -->
+  <div class="dlg-backdrop" id="dlg">
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-q">
+      <h2 id="dlg-q">Do you want to know how big it is?</h2>
+      <div class="row">
+        <button id="btn-no">No</button>
+        <button class="yes" id="btn-yes">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" accept="image/*" capture="environment" id="camera">
+</div>
+
+<script>
+  const VERDICTS = ["Little", "Medium", "Kind of big", "Big"];
+  const $ = id => document.getElementById(id);
+  const screens = ["launch", "subject", "closed"];
+  let photoURL = null;
+
+  function show(name) {
+    screens.forEach(s => $(s).classList.toggle("active", s === name));
+  }
+
+  $("btn-photo").addEventListener("click", () => $("camera").click());
+  $("btn-again").addEventListener("click", () => { resetSubject(); $("camera").click(); });
+  $("btn-reopen").addEventListener("click", () => { resetSubject(); show("launch"); });
+
+  $("camera").addEventListener("change", e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (photoURL) URL.revokeObjectURL(photoURL);
+    photoURL = URL.createObjectURL(file);
+    $("photo").src = photoURL;
+    e.target.value = "";
+    show("subject");
+    $("dlg").classList.add("open");
+    $("btn-yes").focus();
+  });
+
+  $("btn-no").addEventListener("click", () => {
+    $("dlg").classList.remove("open");
+    show("closed");
+  });
+
+  $("btn-yes").addEventListener("click", () => {
+    $("dlg").classList.remove("open");
+    runMeasurement();
+  });
+
+  const STEPS = [
+    "Acquiring dimensions",
+    "Consulting no reference objects",
+    "Ignoring focal length",
+    "Rounding aggressively",
+  ];
+
+  function runMeasurement() {
+    const tel = $("telemetry");
+    tel.innerHTML = "";
+    $("sub-status").textContent = "● Measuring";
+    $("photo-wrap").classList.add("measuring");
+
+    let i = 0;
+    const tick = () => {
+      if (i > 0) tel.children[i - 1].classList.add("done");
+      if (i < STEPS.length) {
+        const line = document.createElement("div");
+        line.textContent = "▸ " + STEPS[i];
+        tel.appendChild(line);
+        i++;
+        setTimeout(tick, 420 + Math.random() * 380);
+      } else {
+        reveal();
+      }
+    };
+    tick();
+  }
+
+  function reveal() {
+    $("photo-wrap").classList.remove("measuring");
+    $("sub-status").textContent = "● Complete";
+    $("verdict").textContent = VERDICTS[Math.floor(Math.random() * VERDICTS.length)];
+    $("certainty").textContent = "Certainty: 100% · Basis: none";
+    $("result").hidden = false;
+    $("again-stack").hidden = false;
+    $("btn-again").focus();
+  }
+
+  function resetSubject() {
+    $("result").hidden = true;
+    $("again-stack").hidden = true;
+    $("telemetry").innerHTML = "";
+    $("sub-status").textContent = "● Idle";
+    $("photo-wrap").classList.remove("measuring");
+  }
+</script>
