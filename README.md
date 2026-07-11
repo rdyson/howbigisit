@@ -11,7 +11,7 @@ That's it. That's the app.
 ## Try it right now
 
 A browser prototype of the exact same flow lives at
-**https://rdyson.github.io/howbigisit/** — open it on a phone and
+**https://rdyson.dev/howbigisit/** — open it on a phone and
 "Take a photo" uses the real camera. No install required.
 
 ## Running it
